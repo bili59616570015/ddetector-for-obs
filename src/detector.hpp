@@ -6,6 +6,7 @@
 #include <QString>
 #include <obs-frontend-api.h>
 #include <obs-module.h>
+#include <QThread>
 
 class Detector : public QWidget {
 	Q_OBJECT
@@ -23,6 +24,7 @@ private:
 	QLineEdit *webRidInput;
 	QTimer *timer;
 	int callCount = 0;
+    QThread *workerThread = nullptr;
 
 public:
 	void PostLoad();

@@ -46,8 +46,6 @@ Detector::Detector(QWidget *parent) : QWidget(parent)
 		QString text = webRidInput->text();
 		Detector::saveString("webRid", text);
 	});
-
-	setupWorkerThread();
 }
 
 Detector::~Detector()
@@ -68,6 +66,9 @@ void Detector::StartButtonClicked()
 	webRidInput->setReadOnly(true);
 	startButton->hide();
 	stopButton->show();
+	if (!workerThread) {
+		setupWorkerThread();
+	}
 	FetchApi();          // immediately call once
 	timer->start(20000); // 20 seconds
 }
@@ -79,6 +80,11 @@ void Detector::StopButtonClicked()
 	stopButton->hide();
 	startButton->show();
 	resultLabel->setText("");
+	if (workerThread) {
+		workerThread->quit();
+		workerThread->wait();
+		workerThread = nullptr; // optional: or restart it later
+	}
 }
 
 void Detector::refreshBrowserSource(const char *source_name)
@@ -101,15 +107,15 @@ void Detector::refreshBrowserSource(const char *source_name)
 
 void Detector::setupWorkerThread()
 {
-	QThread *thread = new QThread(this);
+	workerThread = new QThread(this);
 	ApiWorker *worker = new ApiWorker();
-	worker->moveToThread(thread);
+	worker->moveToThread(workerThread);
 
-	connect(thread, &QThread::finished, worker, &QObject::deleteLater);
+	connect(workerThread, &QThread::finished, worker, &QObject::deleteLater);
 	connect(this, &Detector::startCheckLiveStatus, worker, &ApiWorker::checkLiveStatus);
-	connect(worker, &ApiWorker::liveStatusChecked, this, &Detector::handleLiveStatusResult);
+	connect(worker, &ApiWorker::liveStatusChecked, this, &Detector::handleLiveStatusResult, Qt::QueuedConnection);
 
-	thread->start();
+	workerThread->start();
 }
 
 void Detector::handleLiveStatusResult(bool isLive, const QString &user)
