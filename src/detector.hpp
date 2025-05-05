@@ -25,7 +25,15 @@ public:
     void FetchApi();
     void StartButtonClicked();
     void StopButtonClicked();
-    bool isLiveRoomStarted(const QString &webRid);
+    // bool isLiveRoomStarted(const QString &webRid);
     void refreshBrowserSource(const char *source_name);
     QString getWebRid() const;
+signals:
+    void startCheckLiveStatus(const QString &webRid);
+
+private slots:
+    void handleLiveStatusResult(bool isLive, const QString &user);
+
+private:
+    void setupWorkerThread();
 };
