@@ -50,7 +50,7 @@ void Detector::StartButtonClicked() {
     startButton->hide();
     stopButton->show();
     FetchApi(); // immediately call once
-    timer->start(60000); // 60 seconds
+    timer->start(20000); // 20 seconds
 }
 
 void Detector::StopButtonClicked() {
