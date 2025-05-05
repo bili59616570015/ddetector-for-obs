@@ -4,18 +4,18 @@
 #include <nlohmann/json.hpp>
 
 class ApiWorker : public QObject {
-    Q_OBJECT
+	Q_OBJECT
 public:
-    explicit ApiWorker(QObject *parent = nullptr) : QObject(parent) {}
+	explicit ApiWorker(QObject *parent = nullptr) : QObject(parent) {}
 
 public slots:
-    void checkLiveStatus(const QString &webRid);
+	void checkLiveStatus(const QString &webRid);
 
 signals:
-    void liveStatusChecked(bool isLive, const QString message);
+	void liveStatusChecked(bool isLive, const QString message);
 
 private:
-    bool isLiveRoomStarted(const QString &webRid);
-    QString getTtwid();
-    QString randomUserAgent();
+	bool isLiveRoomStarted(const QString &webRid);
+	QString getTtwid();
+	QString randomUserAgent();
 };

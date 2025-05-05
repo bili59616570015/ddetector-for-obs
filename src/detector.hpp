@@ -10,32 +10,34 @@
 class Detector : public QWidget {
 	Q_OBJECT
 public:
-    explicit Detector(QWidget *parent = nullptr);
-    ~Detector();
+	explicit Detector(QWidget *parent = nullptr);
+	~Detector();
+
 private:
-    void *vendor;
-    QString getString(const QString &key);
-    void saveString(const QString &key, const QString &value);
-    QPushButton *startButton;
-    QPushButton *stopButton;
-    QLabel *resultLabel;
-    QLineEdit *webRidInput;
-    QTimer *timer;
-    int callCount = 0;
+	void *vendor;
+	QString getString(const QString &key);
+	void saveString(const QString &key, const QString &value);
+	QPushButton *startButton;
+	QPushButton *stopButton;
+	QLabel *resultLabel;
+	QLineEdit *webRidInput;
+	QTimer *timer;
+	int callCount = 0;
+
 public:
-    void PostLoad();
-    void FetchApi();
-    void StartButtonClicked();
-    void StopButtonClicked();
-    // bool isLiveRoomStarted(const QString &webRid);
-    void refreshBrowserSource(const char *source_name);
-    QString getWebRid() const;
+	void PostLoad();
+	void FetchApi();
+	void StartButtonClicked();
+	void StopButtonClicked();
+	// bool isLiveRoomStarted(const QString &webRid);
+	void refreshBrowserSource(const char *source_name);
+	QString getWebRid() const;
 signals:
-    void startCheckLiveStatus(const QString &webRid);
+	void startCheckLiveStatus(const QString &webRid);
 
 private slots:
-    void handleLiveStatusResult(bool isLive, const QString &user);
+	void handleLiveStatusResult(bool isLive, const QString &user);
 
 private:
-    void setupWorkerThread();
+	void setupWorkerThread();
 };
