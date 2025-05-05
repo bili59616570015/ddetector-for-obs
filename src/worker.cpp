@@ -50,6 +50,13 @@ QString ApiWorker::getTtwid()
 		curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
 		curl_easy_setopt(curl, CURLOPT_HEADERDATA, &cookies);
 
+        // Additional options
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, randomUserAgent().toStdString().c_str());
+        curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); // For debugging
+
 		curl_easy_perform(curl);
 		curl_easy_cleanup(curl);
 
