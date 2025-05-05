@@ -14,6 +14,8 @@ public:
     ~Detector();
 private:
     void *vendor;
+    QString getString(const QString &key);
+    void saveString(const QString &key, const QString &value);
     QPushButton *startButton;
     QPushButton *stopButton;
     QLabel *resultLabel;
