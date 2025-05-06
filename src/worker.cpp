@@ -31,7 +31,7 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *use
 static size_t HeaderCallback(char *buffer, size_t size, size_t nitems, void *userdata)
 {
 	std::string header(buffer, size * nitems);
-	if (header.find("set-cookie:") == 0) {
+	if (header.find("Set-Cookie:") == 0) {
 		std::string *cookies = (std::string *)userdata;
 		*cookies += header;
 	}
