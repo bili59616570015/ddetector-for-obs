@@ -24,7 +24,7 @@ private:
 	QLineEdit *webRidInput;
 	QTimer *timer;
 	int callCount = 0;
-    QThread *workerThread = nullptr;
+	QThread *workerThread = nullptr;
 
 public:
 	void PostLoad();
