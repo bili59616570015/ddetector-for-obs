@@ -25,7 +25,7 @@ private:
 	QTimer *timer;
 	int callCount = 0;
 	QThread *workerThread = nullptr;
-    std::atomic<bool> m_isStopping = false;
+	std::atomic<bool> m_isStopping = false;
 
 public:
 	void PostLoad();

@@ -81,11 +81,13 @@ void Detector::StopButtonClicked()
 	stopButton->hide();
 	startButton->show();
 	if (workerThread) {
+		workerThread->requestInterruption();
 		workerThread->quit();
-		workerThread->wait();
+		workerThread->wait(100);
+		delete workerThread;
 		workerThread = nullptr; // optional: or restart it later
 	}
-	QMetaObject::invokeMethod(resultLabel, "setText", Qt::QueuedConnection, Q_ARG(QString, ""));
+	resultLabel->setText("");
 	m_isStopping = false;
 }
 
@@ -122,7 +124,8 @@ void Detector::setupWorkerThread()
 
 void Detector::handleLiveStatusResult(bool isLive, const QString &user)
 {
-	if (m_isStopping) return;
+	if (m_isStopping)
+		return;
 	QString statusStr = isLive ? "直播中" : "空闲";
 	resultLabel->setText(user + ": " + statusStr + " (" + QString::number(callCount++) + ")");
 
