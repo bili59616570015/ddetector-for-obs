@@ -110,7 +110,10 @@ void ApiWorker::checkLiveStatus(const QString &webRid)
 
 	try {
 		json j = json::parse(response);
-		int status = j["data"]["data"][0]["status"];
+		int status = -1; // default value
+		if (!j["data"]["data"].empty()) {
+			status = j["data"]["data"][0].value("status", -1);
+		}
 		std::string user = j["data"]["user"]["nickname"];
 		emit liveStatusChecked(status == 2, QString::fromStdString(user));
 		return;
