@@ -126,7 +126,11 @@ void Detector::handleLiveStatusResult(bool isLive, const QString &user)
 	if (isLive) {
 		if (!obs_frontend_recording_active()) {
 			refreshBrowserSource("Browser");
-			obs_frontend_recording_start();
+			QTimer::singleShot(3000, this, []() {
+				if (!obs_frontend_recording_active()) {
+					obs_frontend_recording_start();
+				}
+			});
 		}
 	} else {
 		if (obs_frontend_recording_active()) {
