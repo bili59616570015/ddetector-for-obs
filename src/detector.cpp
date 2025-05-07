@@ -75,16 +75,18 @@ void Detector::StartButtonClicked()
 
 void Detector::StopButtonClicked()
 {
+	m_isStopping = true;
 	webRidInput->setReadOnly(false);
 	timer->stop();
 	stopButton->hide();
 	startButton->show();
-	resultLabel->setText("");
 	if (workerThread) {
 		workerThread->quit();
 		workerThread->wait();
 		workerThread = nullptr; // optional: or restart it later
 	}
+	QMetaObject::invokeMethod(resultLabel, "setText", Qt::QueuedConnection, Q_ARG(QString, ""));
+	m_isStopping = false;
 }
 
 void Detector::refreshBrowserSource(const char *source_name)
@@ -120,6 +122,7 @@ void Detector::setupWorkerThread()
 
 void Detector::handleLiveStatusResult(bool isLive, const QString &user)
 {
+	if (m_isStopping) return;
 	QString statusStr = isLive ? "直播中" : "空闲";
 	resultLabel->setText(user + ": " + statusStr + " (" + QString::number(callCount++) + ")");
 

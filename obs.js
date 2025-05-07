@@ -71,7 +71,7 @@ function checkStatePeriodically() {
             console.log("Paused. Pressing E...");
             pressKey("e");
         }
-    }, 40000); // Check every 40,000 milliseconds (40 seconds)
+    }, 30000); // Check every 30,000 milliseconds (30 seconds)
 }
 
 // 
@@ -85,6 +85,7 @@ function pressKey(key) {
 }
 
 function setupCss() {
+    document.body.style.zoom = "150%";
     var obsCSS = document.createElement("style");
     // obsCSS.textContent = ".webcast-chatroom___content-with-emoji-text { font-size: 19px !important; line-height: 1.5; }";
     obsCSS.textContent = ".webcast-chatroom * { font-size: 19px !important; line-height: 1.5em !important; }; .webcast-chatroom___item-wrapper div { padding: 2px 0 !important; } ";
@@ -102,7 +103,7 @@ function moveMouse() {
         });
 
         element.dispatchEvent(mouseMoveEvent);
-    }, 5000); // Move mouse every second
+    }, 60000); // Move mouse every minute
 }
 
 function wait(ms) {
@@ -114,14 +115,13 @@ moveMouse();
 
 async function start() {
     await wait(1000);
-    document.body.style.zoom = "150%";
-	setupCss();
-    selectQuality();
+	setupCss(); // 设置页面字体大小
+    selectQuality(); // 设置画质（如没有登陆请在行前加上//）
 	await wait(1000);
-    pressKey("e");
+    pressKey("e"); // 刷新网页
     await wait(1000);
-    pressKey("y"); // fullscreen
-    pressKey("b");
+    pressKey("y"); // 全屏
+    pressKey("b"); // 关闭弹幕
 }
 
 start();
