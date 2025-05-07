@@ -1,3 +1,6 @@
+## 使用方法
+https://gitcode.com/bili59616570015/DDetector
+
 # OBS Plugin Template
 
 ## Introduction
