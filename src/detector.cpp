@@ -141,6 +141,7 @@ void Detector::handleLiveStatusResult(bool isLive, const QString &user)
 	} else {
 		if (obs_frontend_recording_active()) {
 			obs_frontend_recording_stop();
+			refreshBrowserSource("Browser");
 		}
 	}
 }

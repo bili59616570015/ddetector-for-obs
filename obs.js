@@ -71,7 +71,7 @@ function checkStatePeriodically() {
             console.log("Paused. Pressing E...");
             pressKey("e");
         }
-    }, 30000); // Check every 30,000 milliseconds (30 seconds)
+    }, 20000); // Check every 30 seconds
 }
 
 // 
@@ -117,7 +117,7 @@ async function start() {
     await wait(1000);
 	setupCss(); // 设置页面字体大小
     selectQuality(); // 设置画质（如没有登陆请在行前加上//）
-	await wait(1000);
+	await wait(500);
     pressKey("e"); // 刷新网页
     await wait(1000);
     pressKey("y"); // 全屏
