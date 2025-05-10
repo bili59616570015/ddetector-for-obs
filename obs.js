@@ -116,10 +116,9 @@ moveMouse();
 async function start() {
     await wait(1000);
 	setupCss(); // 设置页面字体大小
-    selectQuality(); // 设置画质（如没有登陆请在行前加上//）
-	await wait(500);
     pressKey("e"); // 刷新网页
-    await wait(1000);
+    selectQuality(); // 设置画质（如没有登陆请在行前加上//）
+	await wait(1000);
     pressKey("y"); // 全屏
     pressKey("b"); // 关闭弹幕
 }

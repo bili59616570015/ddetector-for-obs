@@ -2,20 +2,24 @@
 #include <QObject>
 #include <QString>
 #include <nlohmann/json.hpp>
+#include <curl/curl.h>
 
 class ApiWorker : public QObject {
 	Q_OBJECT
 public:
-	explicit ApiWorker(QObject *parent = nullptr) : QObject(parent) {}
+	explicit ApiWorker(QObject *parent = nullptr);
+	~ApiWorker(); // Add destructor
 
 public slots:
+	void initialize();
 	void checkLiveStatus(const QString &webRid);
 
 signals:
 	void liveStatusChecked(bool isLive, const QString message);
 
 private:
-	bool isLiveRoomStarted(const QString &webRid);
 	QString getTtwid();
 	QString randomUserAgent();
+	QString m_ttwid;
+	bool m_initialized = false;
 };

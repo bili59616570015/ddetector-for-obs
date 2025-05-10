@@ -7,40 +7,42 @@
 #include <obs-frontend-api.h>
 #include <obs-module.h>
 #include <QThread>
+#include <worker.hpp>
+#include <QMutex>
+#include <QAtomicInt>
+#include <QDateTime>
 
 class Detector : public QWidget {
 	Q_OBJECT
 public:
 	explicit Detector(QWidget *parent = nullptr);
 	~Detector();
+signals:
+	void requestLiveStatusCheck(const QString &webRid); // Changed signal
+
+private slots:
+	void StartButtonClicked();
+	void StopButtonClicked();
+	void HandleLiveStatusResult(bool isLive, const QString &user);
 
 private:
-	void *vendor;
+	void FetchApi();
+	void refreshBrowserSource(const char *source_name);
+	QString getWebRid() const;
 	QString getString(const QString &key);
 	void saveString(const QString &key, const QString &value);
+
+	void *vendor;
 	QPushButton *startButton;
 	QPushButton *stopButton;
 	QLabel *resultLabel;
 	QLineEdit *webRidInput;
 	QTimer *timer;
-	int callCount = 0;
 	QThread *workerThread = nullptr;
+	ApiWorker *worker = nullptr;
+	int callCount = 0;
 	std::atomic<bool> m_isStopping = false;
 
 public:
 	void PostLoad();
-	void FetchApi();
-	void StartButtonClicked();
-	void StopButtonClicked();
-	// bool isLiveRoomStarted(const QString &webRid);
-	void refreshBrowserSource(const char *source_name);
-	QString getWebRid() const;
-signals:
-	void startCheckLiveStatus(const QString &webRid);
-
-private slots:
-	void handleLiveStatusResult(bool isLive, const QString &user);
-
-private:
-	void setupWorkerThread();
 };

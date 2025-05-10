@@ -39,9 +39,6 @@ Detector::Detector(QWidget *parent) : QWidget(parent)
 	// When stop is clicked
 	connect(stopButton, &QPushButton::clicked, this, &Detector::StopButtonClicked);
 
-	// Timer logic
-	connect(timer, &QTimer::timeout, this, &Detector::FetchApi);
-
 	connect(webRidInput, &QLineEdit::editingFinished, this, [=]() {
 		QString text = webRidInput->text();
 		Detector::saveString("webRid", text);
@@ -65,30 +62,65 @@ void Detector::StartButtonClicked()
 	callCount = 0;
 	webRidInput->setReadOnly(true);
 	startButton->hide();
-	stopButton->show();
+	resultLabel->setText("正在检测...");
 	if (!workerThread) {
-		setupWorkerThread();
+		workerThread = new QThread(this);
+		worker = new ApiWorker();
+		worker->moveToThread(workerThread);
+
+		connect(workerThread, &QThread::started, worker, &ApiWorker::initialize);
+		connect(workerThread, &QThread::finished, worker, &QObject::deleteLater);
+		connect(workerThread, &QThread::finished, workerThread, &QObject::deleteLater);
+		connect(this, &Detector::requestLiveStatusCheck, worker, &ApiWorker::checkLiveStatus,
+			Qt::QueuedConnection);
+		connect(worker, &ApiWorker::liveStatusChecked, this, &Detector::HandleLiveStatusResult,
+			Qt::QueuedConnection);
+
+		connect(workerThread, &QThread::finished, this, [this]() {
+			if (workerThread) {
+				workerThread->deleteLater();
+				workerThread = nullptr;
+			}
+		});
+
+		workerThread->start();
 	}
 	FetchApi();          // immediately call once
 	timer->start(20000); // 20 seconds
+	stopButton->show();
+	// Timer logic
+	connect(timer, &QTimer::timeout, this, &Detector::FetchApi, Qt::UniqueConnection);
 }
 
 void Detector::StopButtonClicked()
 {
 	m_isStopping = true;
-	webRidInput->setReadOnly(false);
 	timer->stop();
 	stopButton->hide();
-	startButton->show();
+
 	if (workerThread) {
-		workerThread->requestInterruption();
+		disconnect(workerThread, nullptr, nullptr, nullptr); // optional safety
+
+		// Ensure cleanup happens after the thread has actually exited
+		connect(workerThread, &QThread::finished, this, [this]() {
+			workerThread->deleteLater();
+			workerThread = nullptr;
+			worker = nullptr;
+
+			resultLabel->setText("");
+			webRidInput->setReadOnly(false);
+			startButton->show();
+			m_isStopping = false;
+		});
+
 		workerThread->quit();
-		workerThread->wait(100);
-		delete workerThread;
-		workerThread = nullptr; // optional: or restart it later
+	} else {
+		// If no thread, reset UI immediately
+		resultLabel->setText("");
+		webRidInput->setReadOnly(false);
+		startButton->show();
+		m_isStopping = false;
 	}
-	resultLabel->setText("");
-	m_isStopping = false;
 }
 
 void Detector::refreshBrowserSource(const char *source_name)
@@ -109,20 +141,7 @@ void Detector::refreshBrowserSource(const char *source_name)
 	obs_source_release(source);
 }
 
-void Detector::setupWorkerThread()
-{
-	workerThread = new QThread(this);
-	ApiWorker *worker = new ApiWorker();
-	worker->moveToThread(workerThread);
-
-	connect(workerThread, &QThread::finished, worker, &QObject::deleteLater);
-	connect(this, &Detector::startCheckLiveStatus, worker, &ApiWorker::checkLiveStatus);
-	connect(worker, &ApiWorker::liveStatusChecked, this, &Detector::handleLiveStatusResult, Qt::QueuedConnection);
-
-	workerThread->start();
-}
-
-void Detector::handleLiveStatusResult(bool isLive, const QString &user)
+void Detector::HandleLiveStatusResult(bool isLive, const QString &user)
 {
 	if (m_isStopping)
 		return;
@@ -141,14 +160,17 @@ void Detector::handleLiveStatusResult(bool isLive, const QString &user)
 	} else {
 		if (obs_frontend_recording_active()) {
 			obs_frontend_recording_stop();
-			refreshBrowserSource("Browser");
+			QTimer::singleShot(3000, this, [this]() { refreshBrowserSource("Browser"); });
 		}
 	}
 }
 
 void Detector::FetchApi()
 {
-	emit startCheckLiveStatus(getWebRid()); // Triggers background thread
+	if (worker && !m_isStopping) {
+		emit requestLiveStatusCheck(getWebRid());
+	}
+	// emit startCheckLiveStatus(getWebRid()); // Triggers background thread
 }
 
 QString Detector::getWebRid() const

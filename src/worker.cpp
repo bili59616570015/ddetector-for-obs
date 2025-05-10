@@ -3,8 +3,19 @@
 #include <nlohmann/json.hpp>
 #include <random>
 #include <QStringList>
+#include <QThread>
 
 using json = nlohmann::json;
+
+ApiWorker::ApiWorker(QObject *parent) : QObject(parent)
+{
+	// Initialize nothing here - do it all in initialize()
+}
+
+ApiWorker::~ApiWorker()
+{
+	curl_global_cleanup();
+}
 
 QString ApiWorker::randomUserAgent()
 {
@@ -38,6 +49,20 @@ static size_t HeaderCallback(char *buffer, size_t size, size_t nitems, void *use
 	return size * nitems;
 }
 
+void ApiWorker::initialize()
+{
+	if (m_initialized)
+		return;
+
+	// 1. Global CURL initialization
+	curl_global_init(CURL_GLOBAL_DEFAULT);
+
+	// 3. Cache Initialization - get initial cookie
+	m_ttwid = getTtwid();
+
+	m_initialized = true;
+}
+
 QString ApiWorker::getTtwid()
 {
 	CURL *curl = curl_easy_init();
@@ -49,13 +74,6 @@ QString ApiWorker::getTtwid()
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 		curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
 		curl_easy_setopt(curl, CURLOPT_HEADERDATA, &cookies);
-
-		// Additional options
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, randomUserAgent().toStdString().c_str());
-		curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
-		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); // For debugging
 
 		curl_easy_perform(curl);
 		curl_easy_cleanup(curl);
@@ -71,6 +89,13 @@ QString ApiWorker::getTtwid()
 
 void ApiWorker::checkLiveStatus(const QString &webRid)
 {
+	if (!m_initialized) {
+		initialize(); // Fallback in case initialization wasn't called
+	}
+	if (QThread::currentThread()->isInterruptionRequested()) {
+		emit liveStatusChecked(false, QString("Thread interrupted"));
+		return;
+	}
 	CURL *curl = curl_easy_init();
 	if (!curl) {
 		emit liveStatusChecked(false, QString("CURL initialization failed"));
@@ -78,7 +103,7 @@ void ApiWorker::checkLiveStatus(const QString &webRid)
 	};
 
 	std::string response;
-	QString ttwid = getTtwid();
+	QString ttwid = m_ttwid.isEmpty() ? getTtwid() : m_ttwid;
 	if (ttwid.isEmpty()) {
 		emit liveStatusChecked(false, QString("Failed to get ttwid"));
 		return;
@@ -98,13 +123,14 @@ void ApiWorker::checkLiveStatus(const QString &webRid)
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
 
 	CURLcode res = curl_easy_perform(curl);
 	curl_slist_free_all(headers);
 	curl_easy_cleanup(curl);
 
 	if (res != CURLE_OK) {
-		emit liveStatusChecked(false, QString("CURL error: %1").arg(curl_easy_strerror(res)));
+		emit liveStatusChecked(false, "Network Error");
 		return;
 	};
 
