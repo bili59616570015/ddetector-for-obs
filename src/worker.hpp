@@ -15,7 +15,7 @@ public slots:
 	void checkLiveStatus(const QString &webRid);
 
 signals:
-	void liveStatusChecked(bool isLive, const QString message);
+	void liveStatusChecked(std::optional<bool> isLive, const QString message);
 
 private:
 	QString getTtwid();

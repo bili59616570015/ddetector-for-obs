@@ -23,7 +23,7 @@ signals:
 private slots:
 	void StartButtonClicked();
 	void StopButtonClicked();
-	void HandleLiveStatusResult(bool isLive, const QString &user);
+	void HandleLiveStatusResult(std::optional<bool> isLive, const QString &user);
 
 private:
 	void FetchApi();

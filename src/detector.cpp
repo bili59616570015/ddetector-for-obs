@@ -141,14 +141,15 @@ void Detector::refreshBrowserSource(const char *source_name)
 	obs_source_release(source);
 }
 
-void Detector::HandleLiveStatusResult(bool isLive, const QString &user)
+void Detector::HandleLiveStatusResult(std::optional<bool> isLive, const QString &user)
 {
-	if (m_isStopping)
+	if (m_isStopping || !isLive.has_value())
 		return;
-	QString statusStr = isLive ? "直播中" : "空闲";
+	bool liveStatus = isLive.value();
+	QString statusStr = liveStatus ? "直播中" : "空闲";
 	resultLabel->setText(user + ": " + statusStr + " (" + QString::number(callCount++) + ")");
 
-	if (isLive) {
+	if (liveStatus) {
 		if (!obs_frontend_recording_active()) {
 			refreshBrowserSource("Browser");
 			QTimer::singleShot(3000, this, []() {

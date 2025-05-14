@@ -93,19 +93,19 @@ void ApiWorker::checkLiveStatus(const QString &webRid)
 		initialize(); // Fallback in case initialization wasn't called
 	}
 	if (QThread::currentThread()->isInterruptionRequested()) {
-		emit liveStatusChecked(false, QString("Thread interrupted"));
+		emit liveStatusChecked(std::nullopt, QString("Thread interrupted"));
 		return;
 	}
 	CURL *curl = curl_easy_init();
 	if (!curl) {
-		emit liveStatusChecked(false, QString("CURL initialization failed"));
+		emit liveStatusChecked(std::nullopt, QString("CURL initialization failed"));
 		return;
 	};
 
 	std::string response;
 	QString ttwid = m_ttwid.isEmpty() ? getTtwid() : m_ttwid;
 	if (ttwid.isEmpty()) {
-		emit liveStatusChecked(false, QString("Failed to get ttwid"));
+		emit liveStatusChecked(std::nullopt, QString("Failed to get ttwid"));
 		return;
 	};
 	QString url = QString("https://live.douyin.com/webcast/room/web/enter/?web_rid=%1"
@@ -130,7 +130,7 @@ void ApiWorker::checkLiveStatus(const QString &webRid)
 	curl_easy_cleanup(curl);
 
 	if (res != CURLE_OK) {
-		emit liveStatusChecked(false, "Network Error");
+		emit liveStatusChecked(std::nullopt, "Network Error");
 		return;
 	};
 
@@ -141,10 +141,10 @@ void ApiWorker::checkLiveStatus(const QString &webRid)
 			status = j["data"]["data"][0].value("status", -1);
 		}
 		std::string user = j["data"]["user"]["nickname"];
-		emit liveStatusChecked(status == 2, QString::fromStdString(user));
+		emit liveStatusChecked(std::optional(status == 2), QString::fromStdString(user));
 		return;
 	} catch (...) {
-		emit liveStatusChecked(false, QString("JSON parsing error"));
+		emit liveStatusChecked(std::nullopt, QString("JSON parsing error"));
 		return;
 	}
 }
